@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Kaun Banega Luckypati</title>
+<link rel="stylesheet" href="assets/fonts/fonts.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="app">
+
+  <!-- IDLE / ATTRACT SCREEN -->
+  <section id="screen-idle" class="screen screen--active gradient-bg">
+    <div class="idle-logo-wrap idle-logo-wrap--big">
+      <img src="assets/logo.png" alt="Kaun Banega Luckypati" class="idle-logo idle-logo--big" />
+    </div>
+    <button id="btn-new-contestant" class="op-btn op-btn--gold op-btn--start">+ New Contestant</button>
+    <div id="bank-warning" class="bank-warning hidden"></div>
+  </section>
+
+  <!-- NAME ENTRY SCREEN -->
+  <section id="screen-name" class="screen dark-bg">
+    <div class="name-card">
+      <div class="name-card__title">Contestant Name</div>
+      <input id="input-name" class="name-input" type="text" maxlength="40" autocomplete="off" placeholder="Enter name..." />
+      <div class="name-card__actions">
+        <button id="btn-back-idle" class="op-btn op-btn--muted">Back</button>
+        <button id="btn-start-game" class="op-btn op-btn--gold" disabled>Start Game</button>
+      </div>
+      <div id="name-error" class="name-error hidden"></div>
+    </div>
+  </section>
+
+  <!-- INTRO SCREEN -->
+  <section id="screen-intro" class="screen gradient-bg">
+    <div class="idle-logo-wrap idle-logo-wrap--intro">
+      <img src="assets/logo.png" alt="Kaun Banega Luckypati" class="idle-logo" />
+    </div>
+    <div class="intro-name-label">Let's Play With</div>
+    <div id="intro-contestant-name" class="intro-name">&nbsp;</div>
+  </section>
+
+  <!-- GAME SCREEN -->
+  <section id="screen-game" class="screen game-bg">
+    <header class="kbc-topbar">
+      <div class="topbar-pill topbar-pill--walkaway" id="header-name-pill">&nbsp;</div>
+      <div class="topbar-pill topbar-pill--gold">
+        <span class="pts-label">POINTS</span>
+        <span id="header-points" class="pts-value">0</span>
+      </div>
+      <div class="topbar-right">
+        <div id="header-level" class="topbar-pill topbar-pill--level">LEVEL 1</div>
+        <div id="lifeline-badge-visual" class="lifeline-badge">50:50</div>
+      </div>
+    </header>
+
+    <main class="game-main">
+      <div class="question-column">
+        <div class="stage-panel">
+          <img src="assets/logo.png" alt="" class="stage-logo" />
+        </div>
+
+        <div class="question-meta">
+          <div id="timer-ring" class="timer-ring hidden">
+            <span id="timer-value">60</span>
+          </div>
+          <div class="q-meta-text">
+            <span id="q-number" class="q-number">Q1</span>
+            <span class="q-of">of 21</span>
+          </div>
+        </div>
+        <div id="question-panel" class="question-panel">
+          <div id="question-text" class="question-text">Loading question...</div>
+        </div>
+
+        <div id="options-grid" class="options-grid">
+          <button class="option-btn" data-idx="0"><span class="option-tag">A:</span><span class="option-text"></span></button>
+          <button class="option-btn" data-idx="1"><span class="option-tag">B:</span><span class="option-text"></span></button>
+          <button class="option-btn" data-idx="2"><span class="option-tag">C:</span><span class="option-text"></span></button>
+          <button class="option-btn" data-idx="3"><span class="option-tag">D:</span><span class="option-text"></span></button>
+        </div>
+      </div>
+
+      <aside class="ladder-column">
+        <div class="ladder-title">PRIZE LADDER</div>
+        <div id="ladder-list" class="ladder-list"></div>
+      </aside>
+    </main>
+
+    <footer class="game-footer">
+      <button id="btn-lifeline" class="op-btn op-btn--lifeline">50:50</button>
+      <button id="btn-lock-in" class="op-btn op-btn--gold op-btn--lock" disabled>LOCK IN</button>
+      <button id="btn-next-question" class="op-btn op-btn--gold hidden">Next Question &rarr;</button>
+      <button id="btn-quit" class="op-btn op-btn--danger">Quit</button>
+      <button id="btn-abort" class="op-btn op-btn--muted op-btn--small">Abort</button>
+    </footer>
+  </section>
+
+  <!-- EXIT SCREEN (wrong answer / quit) -->
+  <section id="screen-exit" class="screen dark-bg">
+    <div class="exit-card">
+      <div class="exit-card__label" id="exit-outcome-label">GAME OVER</div>
+      <div class="exit-card__name" id="exit-name">&nbsp;</div>
+      <div class="exit-card__level" id="exit-level">Level 0</div>
+      <div class="exit-card__points" id="exit-points">0 points</div>
+      <button id="btn-next-contestant-exit" class="op-btn op-btn--gold">Next Contestant</button>
+    </div>
+  </section>
+
+  <!-- WINNER SCREEN -->
+  <section id="screen-winner" class="screen gradient-bg">
+    <div class="idle-logo-wrap">
+      <img src="assets/logo.png" alt="Kaun Banega Luckypati" class="idle-logo idle-logo--winner" />
+    </div>
+    <div class="winner-title">WINNER!</div>
+    <div id="winner-name" class="winner-name">&nbsp;</div>
+    <button id="btn-next-contestant-winner" class="op-btn op-btn--gold">Next Contestant</button>
+  </section>
+
+  <!-- CONFIRM MODAL -->
+  <div id="confirm-modal" class="modal hidden">
+    <div class="modal-card">
+      <div id="confirm-message" class="modal-message">Are you sure?</div>
+      <div class="modal-actions">
+        <button id="confirm-cancel" class="op-btn op-btn--muted">Cancel</button>
+        <button id="confirm-ok" class="op-btn op-btn--danger">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<audio id="sfx-intro" src="assets/sfx/mainintro.mp3" preload="auto"></audio>
+<audio id="sfx-before-que" src="assets/sfx/before_que.mp3" preload="auto"></audio>
+<audio id="sfx-lock" src="assets/sfx/option_lock.mp3" preload="auto"></audio>
+<audio id="sfx-correct" src="assets/sfx/correct.wav" preload="auto"></audio>
+<audio id="sfx-wrong" src="assets/sfx/wrong.mp3" preload="auto"></audio>
+<audio id="sfx-tick" src="assets/sfx/tick.wav" preload="auto"></audio>
+
+<script src="app.js"></script>
+</body>
+</html>
