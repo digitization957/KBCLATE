@@ -294,6 +294,7 @@
       }
       el("btn-next-question").classList.remove("hidden");
       el("btn-lock-in").classList.add("hidden");
+      el("btn-quit").disabled = false;
       return;
     }
 
@@ -323,7 +324,14 @@
     api().use_lifeline().then((res) => {
       if (!res.ok) return;
       el("btn-lifeline").disabled = true;
+      // Force a fresh choice from the remaining two options: a pre-existing
+      // selection may have been one of the two just removed, and locking
+      // that in silently would submit an answer the operator can no longer see.
+      selectedIdx = null;
+      selectedText = null;
+      el("btn-lock-in").disabled = true;
       document.querySelectorAll(".option-btn").forEach((b) => {
+        b.classList.remove("selected");
         if (!res.options.includes(b.dataset.text)) {
           b.classList.add("removed");
           b.disabled = true;

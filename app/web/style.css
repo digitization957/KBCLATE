@@ -434,6 +434,7 @@ html, body {
   text-align: center;
   line-height: 1.3;
   text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  overflow-wrap: break-word;
 }
 
 .options-grid {
@@ -502,7 +503,7 @@ html, body {
   flex-shrink: 0;
 }
 .option-tag::before { content: "\2022"; margin-right: 5px; opacity: 0.7; }
-.option-text { flex: 1; }
+.option-text { flex: 1; overflow-wrap: break-word; min-width: 0; }
 
 /* screen flash on timeout */
 .game-bg.timeout-flash { animation: flashRed 0.9s ease; }

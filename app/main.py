@@ -25,7 +25,7 @@ def main():
         INDEX_HTML,
         js_api=api,
         fullscreen=True,
-        confirm_close=False,
+        confirm_close=True,
         background_color="#1a0033",
     )
 

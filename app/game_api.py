@@ -162,6 +162,7 @@ class Api:
         random.shuffle(remaining)
 
         self.lifeline_used = True
+        self.pending_option = None  # force a fresh selection from the remaining two
         return {"ok": True, "options": remaining}
 
     def lock_in(self):
@@ -253,6 +254,11 @@ class Api:
         is_new = not os.path.exists(path)
         qnum = self.current_index + 1
         with open(path, "a", newline="", encoding="utf-8") as f:
+            if is_new:
+                # BOM so Excel opens the CSV correctly on double-click instead
+                # of garbling Devanagari names (safe under append mode since
+                # it's only ever written once, right here, on file creation).
+                f.write("﻿")
             writer = csv.writer(f)
             if is_new:
                 writer.writerow([

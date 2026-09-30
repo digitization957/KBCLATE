@@ -1,6 +1,15 @@
 """Loads the question bank from data/questions.xlsx."""
 import os
+import unicodedata
+
 import openpyxl
+
+
+def _clean(value):
+    """Strip and Unicode-normalize (NFC) so visually-identical text (this
+    matters for Devanagari, where combining characters can be encoded in
+    more than one way) compares equal between the answer and option cells."""
+    return unicodedata.normalize("NFC", str(value).strip())
 
 REQUIRED_COLUMNS = ["que", "option1", "option2", "option3", "option4", "answer", "level"]
 
@@ -44,8 +53,12 @@ def load_questions(xlsx_path):
         except (TypeError, ValueError):
             raise QuestionBankError(f"Row {row_num} has a non-numeric level: {level!r}")
 
-        options = [str(o).strip() for o in options]
-        answer = str(answer).strip()
+        que = _clean(que)
+        options = [_clean(o) for o in options]
+        answer = _clean(answer)
+
+        if not que or not answer or any(not o for o in options):
+            raise QuestionBankError(f"Row {row_num} has a blank (whitespace-only) cell.")
 
         if level not in by_level:
             raise QuestionBankError(f"Row {row_num} has an invalid level: {level} (must be 1-4)")
@@ -55,7 +68,7 @@ def load_questions(xlsx_path):
             )
 
         by_level[level].append({
-            "question": str(que).strip(),
+            "question": que,
             "options": options,
             "answer": answer,
         })

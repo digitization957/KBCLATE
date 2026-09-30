@@ -65,7 +65,9 @@ def ensure_user_files():
         shutil.copy(template, questions_path)
 
     if not os.path.exists(log_path):
-        with open(log_path, "w", newline="", encoding="utf-8") as f:
+        # utf-8-sig (BOM) so Excel opens the CSV correctly on double-click
+        # instead of garbling Devanagari contestant names.
+        with open(log_path, "w", newline="", encoding="utf-8-sig") as f:
             csv.writer(f).writerow(LOG_HEADER)
 
     return questions_path, log_path
