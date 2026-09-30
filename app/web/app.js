@@ -70,9 +70,28 @@
   });
 
   // ---------------- IDLE screen ----------------
+  el("excel-toast-close").addEventListener("click", () => {
+    el("excel-toast").classList.add("hidden");
+  });
+
   function enterIdle() {
     stopAllSfx();
     showScreen("idle");
+
+    api().check_open_files().then((res) => {
+      const toast = el("excel-toast");
+      const locked = [];
+      if (res.questions_locked) locked.push("questions.xlsx");
+      if (res.log_locked) locked.push("game-log.csv");
+      if (locked.length) {
+        el("excel-toast-text").textContent =
+          "Close " + locked.join(" and ") + " in Excel so the game works properly.";
+        toast.classList.remove("hidden");
+      } else {
+        toast.classList.add("hidden");
+      }
+    });
+
     api().check_bank().then((res) => {
       const warn = el("bank-warning");
       if (!res.ok) {
@@ -257,6 +276,7 @@
   function performLockIn(isTimeout) {
     if (locked) return;
     locked = true;
+    const lifelineWasDisabled = el("btn-lifeline").disabled;
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     el("btn-lock-in").disabled = true;
     document.querySelectorAll(".option-btn").forEach((b) => (b.disabled = true));
@@ -266,7 +286,19 @@
     playSfx(sfx.lock);
 
     setTimeout(() => {
-      api().lock_in().then(handleLockResult);
+      api().lock_in().then(handleLockResult).catch(() => {
+        // Backend call failed unexpectedly (e.g. pywebview bridge hiccup).
+        // Without this, `locked` and every disabled control above would be
+        // stuck permanently since handleLockResult would never run --
+        // re-enable everything so the operator can just press Lock In again.
+        locked = false;
+        el("btn-lock-in").disabled = false;
+        document.querySelectorAll(".option-btn").forEach((b) => {
+          if (!b.classList.contains("removed")) b.disabled = false;
+        });
+        el("btn-lifeline").disabled = lifelineWasDisabled;
+        el("btn-quit").disabled = false;
+      });
     }, 1500);
   }
 

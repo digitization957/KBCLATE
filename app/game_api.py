@@ -3,6 +3,7 @@ import csv
 import datetime
 import os
 import random
+import time
 
 from data_loader import load_questions, QuestionBankError
 
@@ -56,6 +57,25 @@ class Api:
             return {"ok": False, "error": self._bank_error}
         counts = {lvl: len(qs) for lvl, qs in self._bank.items()}
         return {"ok": True, "counts": counts}
+
+    @staticmethod
+    def _is_locked(path):
+        # Opening for read+write without truncating doesn't touch the file's
+        # content, but fails with PermissionError if another program (e.g.
+        # Excel) currently has it open for editing -- that's the same failure
+        # mode that would otherwise hit us mid-game when writing the log.
+        try:
+            with open(path, "r+b"):
+                pass
+            return False
+        except OSError:
+            return True
+
+    def check_open_files(self):
+        return {
+            "questions_locked": self._is_locked(self._xlsx_path),
+            "log_locked": self._is_locked(self._log_path),
+        }
 
     # ---------- run state ----------
 
@@ -250,9 +270,44 @@ class Api:
     # ---------- logging ----------
 
     def _log_result(self, outcome):
-        path = self._log_path
-        is_new = not os.path.exists(path)
+        # This runs mid-lock-in, with the whole UI already disabled waiting
+        # on our return value. It must never raise: an operator commonly has
+        # game-log.csv open in Excel to watch results live, which holds an
+        # OS-level lock and makes a plain open(path, "a") raise PermissionError
+        # -- if that propagated, the frontend's lock_in() call would reject
+        # with no handler for it, leaving Lock In stuck disabled forever.
         qnum = self.current_index + 1
+        row = [
+            datetime.datetime.now().isoformat(timespec="seconds"),
+            self.name,
+            outcome,
+            LEVEL_LABEL[self.milestone_level],
+            self.correct_count * 5,
+            "Yes" if self.lifeline_used else "No",
+            qnum,
+        ]
+
+        # Short retries absorb a brief lock (e.g. antivirus scan, OneDrive
+        # sync) without stalling the UI for long.
+        for _attempt in range(5):
+            try:
+                self._append_log_row(self._log_path, row)
+                return
+            except OSError:
+                time.sleep(0.15)
+
+        # Still locked (most likely open in Excel) -- write to a side file
+        # next to the real log so the result isn't lost, instead of losing
+        # the game's progress just because the log couldn't be appended.
+        try:
+            fallback_path = self._log_path + ".pending.csv"
+            self._append_log_row(fallback_path, row)
+        except OSError:
+            pass  # nothing more we can do; the game must proceed regardless
+
+    @staticmethod
+    def _append_log_row(path, row):
+        is_new = not os.path.exists(path)
         with open(path, "a", newline="", encoding="utf-8") as f:
             if is_new:
                 # BOM so Excel opens the CSV correctly on double-click instead
@@ -265,15 +320,7 @@ class Api:
                     "timestamp", "name", "outcome", "level_reached",
                     "points", "lifeline_used", "last_question_number",
                 ])
-            writer.writerow([
-                datetime.datetime.now().isoformat(timespec="seconds"),
-                self.name,
-                outcome,
-                LEVEL_LABEL[self.milestone_level],
-                self.correct_count * 5,
-                "Yes" if self.lifeline_used else "No",
-                qnum,
-            ])
+            writer.writerow(row)
 
     # ---------- kiosk control ----------
 

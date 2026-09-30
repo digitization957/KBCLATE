@@ -126,6 +126,35 @@ html, body {
   right: 4vw;
 }
 
+.excel-toast {
+  position: absolute;
+  top: 3vh;
+  right: 4vw;
+  max-width: 34vw;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(244, 196, 48, 0.15);
+  border: 1px solid var(--gold);
+  color: var(--gold-hi);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.4;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+}
+.excel-toast-close {
+  background: none;
+  border: none;
+  color: var(--gold-hi);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+  flex-shrink: 0;
+}
+.excel-toast-close:hover { color: var(--white); }
+
 .bank-warning {
   position: absolute;
   bottom: 3vh;

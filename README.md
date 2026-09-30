@@ -63,3 +63,8 @@ also now ask for confirmation first, so a stray keypress won't kill it mid-game.
 Open `game-log.csv` on the Desktop in Excel to see every contestant's result:
 name, outcome (WIN / LOST / QUIT), level reached, points, whether they used the
 lifeline, and which question number they were on.
+
+If you keep `game-log.csv` open in Excel *while the game is running*, a result
+that can't be appended because the file is locked is written instead to
+`game-log.csv.pending.csv` in the same folder — check there too if a contestant's
+result seems missing after the event.
