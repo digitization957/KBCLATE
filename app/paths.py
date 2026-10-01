@@ -2,6 +2,7 @@
 data folder, working identically whether run as `python main.py` or as a
 frozen PyInstaller .exe."""
 import csv
+import hashlib
 import os
 import shutil
 import sys
@@ -60,9 +61,31 @@ def ensure_user_files():
     questions_path = os.path.join(folder, "questions.xlsx")
     log_path = os.path.join(folder, "game-log.csv")
 
-    if not os.path.exists(questions_path):
-        template = resource_path("data", "questions.xlsx")
-        shutil.copy(template, questions_path)
+    # The bundled bank is authoritative: whenever a new build ships a different
+    # bank than the one last installed, replace the Desktop copy once (the old
+    # one is kept as questions-old.xlsx). Edits made afterwards are preserved.
+    template = resource_path("data", "questions.xlsx")
+    with open(template, "rb") as f:
+        bundled_hash = hashlib.sha256(f.read()).hexdigest()
+    marker_path = os.path.join(folder, ".bank-version")
+    try:
+        with open(marker_path, encoding="utf-8") as f:
+            installed_hash = f.read().strip()
+    except OSError:
+        installed_hash = None
+
+    if not os.path.exists(questions_path) or installed_hash != bundled_hash:
+        if os.path.exists(questions_path):
+            try:
+                shutil.copy(questions_path, os.path.join(folder, "questions-old.xlsx"))
+            except OSError:
+                pass
+        try:
+            shutil.copy(template, questions_path)
+            with open(marker_path, "w", encoding="utf-8") as f:
+                f.write(bundled_hash)
+        except OSError:
+            pass  # e.g. file open in Excel; retried next launch
 
     if not os.path.exists(log_path):
         # utf-8-sig (BOM) so Excel opens the CSV correctly on double-click

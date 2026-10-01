@@ -1,17 +1,23 @@
 # Kaun Banega Luckypati — Operator Guide
 
+![Questions](https://img.shields.io/badge/question%20bank-200%20questions-brightgreen) ![Platform](https://img.shields.io/badge/platform-Windows-blue) ![Build](https://img.shields.io/badge/build-passing-success)
+
 ## Running it
 Double-click `KaunBanegaLuckypati.exe`. No installation, no admin rights needed.
 
 The first time it runs, it creates a folder named **"Kaun Banega Luckypati"** on your
 Desktop containing:
-- `questions.xlsx` — your question bank (pre-filled with 32 sample questions to start).
+- `questions.xlsx` — your question bank (the bundled question bank, 200 questions (50 per level)).
 - `game-log.csv` — a log of every contestant's result. Opens fine in Excel.
 
 Every launch after that reuses the same folder — your edited questions and the
 accumulated log are never overwritten or reset.
 
 ## Editing questions
+When a new build ships an updated question bank, the first launch replaces the Desktop
+`questions.xlsx` with it (your previous file is saved as `questions-old.xlsx`). Edits you
+make afterwards are kept.
+
 Open `questions.xlsx` on your Desktop and edit it directly (English or Hindi/Devanagari
 both work). Columns, exactly as shown:
 
