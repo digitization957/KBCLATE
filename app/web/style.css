@@ -718,3 +718,5 @@ html, body {
   font-weight: 600;
 }
 .modal-actions { display: flex; justify-content: center; gap: 16px; }
+
+.options-grid.options-hidden { visibility: hidden; }

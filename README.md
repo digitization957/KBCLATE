@@ -39,10 +39,12 @@ both work). Columns, exactly as shown:
   the exact problem instead of failing silently.
 
 ## How a game works
-- 21 questions: Q1–5 (Level 1, no timer), Q6–10 (Level 2), Q11–15 (Level 3),
-  Q16–20 (Level 4) — all with a 60-second timer from Q6 onward — then Q21, the final
-  question, also drawn from the Level 4 pool but never a question already used in
-  anyone's Level 4 slot this session.
+- 21 questions: Q1–5 (Level 1, no timer), Q6–10 (Level 2, 30 s), Q11–15 (Level 3, 45 s),
+  Q16–20 (Level 4, 60 s), then Q21, the final question (60 s), also drawn from the
+  Level 4 pool but never a question already used in anyone's Level 4 slot this session.
+- Each question: the question shows first; **Show Options** reveals the options (soft
+  chime) and starts the timer; select one, **Lock In**; if correct, **Next Question**.
+  It is one button that changes label at each step.
 - Milestone prizes at Q5 / Q10 / Q15 / Q20 / Q21. A wrong answer or a quit falls back
   to the last milestone actually secured; failing before Q5 secures nothing.
 - One 50:50 lifeline per contestant, usable on any question.
@@ -50,15 +52,10 @@ both work). Columns, exactly as shown:
   handled by you/management outside the app — the app only tracks which level was reached.
 
 ## Operator controls (bottom bar during a question)
-- **50:50** — removes two wrong options. Once per contestant.
-- **Lock In** — commits the selected option (select first, then lock in — this is the
-  suspense beat, matching the real show).
-- **Next Question** — appears after a correct answer; advances.
+- **50:50** — available only after Show Options; removes two wrong options. Once per contestant.
+- **Show Options / Lock In / Next Question** — the single main button (see above).
 - **Quit** — ends the contestant's game now, keeping their last secured level. Asks for
   confirmation first.
-- **Abort** — cancels the current run without recording anything, for genuine mistakes
-  or glitches (e.g. wrong name typed, tech hiccup). Asks for confirmation first. Not
-  the same as Quit — Abort leaves no trace in the log at all.
 
 ## Exiting the kiosk
 The app is fullscreen with no visible window controls, by design. Press

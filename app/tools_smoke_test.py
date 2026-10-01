@@ -40,7 +40,7 @@ def test_full_win():
         q = api.get_current_question()
         assert q["ok"], q
         assert q["number"] == i + 1
-        expected_timer = 60 if (i + 1) >= 6 else 0
+        expected_timer = 0 if (i + 1) <= 5 else 30 if (i + 1) <= 10 else 45 if (i + 1) <= 15 else 60
         assert q["timer_seconds"] == expected_timer, (i, q)
 
         result = answer_correctly(api, q)

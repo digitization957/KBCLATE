@@ -22,6 +22,7 @@
     correct: el("sfx-correct"),
     wrong: el("sfx-wrong"),
     tick: el("sfx-tick"),
+    reveal: el("sfx-reveal"),
   };
 
   function playSfx(a) {
@@ -48,6 +49,8 @@
   let selectedIdx = null;
   let selectedText = null;
   let locked = false;
+  let optionsShown = false;
+  let mainState = "show"; // show -> lock -> next
   let timerInterval = null;
   let currentQuestion = null; // last response from get_current_question
 
@@ -170,6 +173,8 @@
       selectedIdx = null;
       selectedText = null;
       locked = false;
+      optionsShown = false;
+      el("options-grid").classList.add("options-hidden");
 
       el("header-name-pill").textContent = contestantName;
       el("header-level").textContent = q.level === "final" ? "FINAL QUESTION" : "LEVEL " + q.level;
@@ -186,15 +191,13 @@
         btn.dataset.text = text;
       });
 
-      el("btn-lock-in").disabled = true;
-      el("btn-lock-in").classList.remove("hidden");
-      el("btn-next-question").classList.add("hidden");
-      el("btn-lifeline").disabled = !q.lifeline_available;
+      setMain("show");
+      el("btn-lifeline").disabled = true; // enabled once options are shown
       el("btn-quit").disabled = false;
       el("lifeline-badge-visual").classList.toggle("lifeline-badge--used", !q.lifeline_available);
 
       renderLadder(q.number, q.milestone_level);
-      setupTimer(q.timer_seconds);
+      prepareTimer(q.timer_seconds);
       playSfx(sfx.beforeQue);
     });
   }
@@ -224,19 +227,28 @@
     }
   }
 
-  function setupTimer(seconds) {
+  let pendingTimerSeconds = 0;
+
+  // Shows the full ring but does not run it; startTimer() runs it on Show Options.
+  function prepareTimer(seconds) {
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    pendingTimerSeconds = seconds || 0;
     const ring = el("timer-ring");
-    if (!seconds || seconds <= 0) {
+    if (pendingTimerSeconds <= 0) {
       ring.classList.add("hidden");
       return;
     }
     ring.classList.remove("hidden");
     ring.classList.remove("timer-warn");
     ring.style.setProperty("--pct", 100);
-    let remaining = seconds;
-    const total = seconds;
-    el("timer-value").textContent = remaining;
+    el("timer-value").textContent = pendingTimerSeconds;
+  }
+
+  function startTimer() {
+    if (pendingTimerSeconds <= 0) return;
+    const ring = el("timer-ring");
+    let remaining = pendingTimerSeconds;
+    const total = pendingTimerSeconds;
     timerInterval = setInterval(() => {
       remaining -= 1;
       el("timer-value").textContent = Math.max(remaining, 0);
@@ -267,18 +279,41 @@
       selectedIdx = parseInt(btn.dataset.idx, 10);
       selectedText = btn.dataset.text;
       api().select_option(selectedText);
-      el("btn-lock-in").disabled = false;
+      el("btn-main").disabled = false;
     });
   });
 
-  el("btn-lock-in").addEventListener("click", () => performLockIn(false));
+  // One button drives the question flow: SHOW OPTIONS -> LOCK IN -> NEXT QUESTION.
+  function setMain(state) {
+    mainState = state;
+    const b = el("btn-main");
+    b.textContent = state === "show" ? "SHOW OPTIONS" : state === "lock" ? "LOCK IN" : "NEXT QUESTION →";
+    b.disabled = state === "lock";
+  }
+
+  el("btn-main").addEventListener("click", () => {
+    if (mainState === "show") {
+      optionsShown = true;
+      el("options-grid").classList.remove("options-hidden");
+      playSfx(sfx.reveal);
+      setMain("lock");
+      el("btn-lifeline").disabled = !(currentQuestion && currentQuestion.lifeline_available);
+      startTimer();
+    } else if (mainState === "lock") {
+      performLockIn(false);
+    } else if (mainState === "next") {
+      api().next_question().then((res) => {
+        if (res.ok) loadQuestion();
+      });
+    }
+  });
 
   function performLockIn(isTimeout) {
     if (locked) return;
     locked = true;
     const lifelineWasDisabled = el("btn-lifeline").disabled;
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-    el("btn-lock-in").disabled = true;
+    el("btn-main").disabled = true;
     document.querySelectorAll(".option-btn").forEach((b) => (b.disabled = true));
     el("btn-lifeline").disabled = true;
     el("btn-quit").disabled = true;
@@ -292,7 +327,7 @@
         // stuck permanently since handleLockResult would never run --
         // re-enable everything so the operator can just press Lock In again.
         locked = false;
-        el("btn-lock-in").disabled = false;
+        el("btn-main").disabled = false;
         document.querySelectorAll(".option-btn").forEach((b) => {
           if (!b.classList.contains("removed")) b.disabled = false;
         });
@@ -324,8 +359,8 @@
       if (res.milestone_hit) {
         renderLadder(currentQuestion.number, res.milestone_level);
       }
-      el("btn-next-question").classList.remove("hidden");
-      el("btn-lock-in").classList.add("hidden");
+      setMain("next");
+      el("btn-main").disabled = false;
       el("btn-quit").disabled = false;
       return;
     }
@@ -345,12 +380,6 @@
     }, 2600);
   }
 
-  el("btn-next-question").addEventListener("click", () => {
-    api().next_question().then((res) => {
-      if (res.ok) loadQuestion();
-    });
-  });
-
   el("btn-lifeline").addEventListener("click", () => {
     if (el("btn-lifeline").disabled) return;
     api().use_lifeline().then((res) => {
@@ -361,7 +390,7 @@
       // that in silently would submit an answer the operator can no longer see.
       selectedIdx = null;
       selectedText = null;
-      el("btn-lock-in").disabled = true;
+      el("btn-main").disabled = true;
       document.querySelectorAll(".option-btn").forEach((b) => {
         b.classList.remove("selected");
         if (!res.options.includes(b.dataset.text)) {
@@ -384,14 +413,6 @@
           points: res.points,
         });
       });
-    });
-  });
-
-  el("btn-abort").addEventListener("click", () => {
-    askConfirm("Abort this run without recording a result?", () => {
-      if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-      stopAllSfx();
-      api().abort_game().then(() => enterIdle());
     });
   });
 

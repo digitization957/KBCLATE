@@ -17,6 +17,9 @@ LEVEL_LABEL = {
     5: "FINAL WINNER",
 }
 
+# Seconds per question by level; the timer starts when options are revealed.
+TIMER_SECONDS = {1: 0, 2: 30, 3: 45, 4: 60, "final": 60}
+
 
 def _level_of_question_number(qnum):
     if qnum <= 5:
@@ -156,7 +159,7 @@ class Api:
             "level": level,
             "question": q["question"],
             "options": q["options"],
-            "timer_seconds": 60 if qnum >= 6 else 0,
+            "timer_seconds": TIMER_SECONDS[level],
             "points": self.correct_count * 5,
             "milestone_level": self.milestone_level,
             "milestone_label": LEVEL_LABEL[self.milestone_level],
